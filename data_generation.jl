@@ -8,7 +8,8 @@ using LinearAlgebra
 using PyCall
 
 
-mgr = SlurmManager()
+ENV["SLURM_NTASKS"] = ENV["JULIA_TOTAL_TASKS"]
+mgr = SlurmManager(;launch_timeout = 600.0, srun_post_exit_sleep = 2.0)
 addprocs(mgr)
 
 
@@ -21,8 +22,8 @@ end
 
     # Specify the emulator input parameters and their lower/upper bounds in the desired order (needs to be adjusted by model type)
     pars = ["z", "ln10As", "ns", "H0", "ombh2", "omch2", "Mnu", "w0", "wa"]
-    lb = [0.2, 2.5, 0.8, 50, 0.02, 0.08, 0, -3, -3]
-    ub = [1.6, 3.5, 1.1, 90, 0.025, 0.18, 0.5, 1, 2]
+    lb = [0.2, 2.3, 0.8, 50, 0.02, 0.08, 0, -3, -3]
+    ub = [1.6, 3.7, 1.1, 90, 0.025, 0.18, 0.5, 1, 2]
 
     # Specify the desired number of data samples (note: if w0wa extension is considered, some samples will be discarded for w0+wa>0)
     n = 50000
@@ -41,7 +42,7 @@ end
     s = s[:, s_cond.<0.0]
 
     # Specify the directory path to store training samples (recommended to change depending on which model/code being used)
-    root_dir = "/global/homes/j/jgmorawe/emulators_pipeline/effort_velocileptors_rept_mnuw0wacdm_" * string(n)
+    root_dir = "effort_velocileptors_rept_mnuw0wacdm_" * string(n)
 
     # Import necessary python modules from Julia (velocileptors_free is modified version of velocileptors to allow for passing k grid directly)
     classy = pyimport("classy")
