@@ -64,8 +64,20 @@ This script generates samples prior to the training process (inputs are cosmolog
 
 
 #### training.jl
-This script generates performs the training itself after the data generation has finished. The existing code is again tailored to the mnuw0waCDM extension but it can be generalized to any model of interest. Here are instructions for how to modify the script to accomodate any model:
+This script performs the training itself after the data generation has finished. The existing code is again tailored to the mnuw0waCDM extension but it can be generalized to any model of interest. Here are instructions for how to modify the script to accomodate any model:
 
 1. `nk` at the top of the script is the size of the emulator k grid, which must be adjusted depending on which k grid the user chooses to apply.
 
-2. 
+2. NOTE: The function `preprocess` applies a rescaling to remove degrees of freedom that are easy to incorporate analytically in a separate step and thus improve emulator accuracy. E.g. for the linear matter power spectrum component, the statistic is divided by $A_s D(z)^2$ and then remultiplied by this after the emulator prediction is made.
+
+3. The function `get_observable_tuple` takes in the cosmology parameters and the full power spectrum result and outputs the tuple of the parameters and the relevant component of the power spectrum. This is tailored currently to mnuw0waCDM, and the user needs to adjust if a different model is used. E.g. if neutrino mass is fixed, `Mν = cosmo_pars["Mnu"]` -> `Mν = 0.06` and remove the entry `cosmo_pars["Mnu"]` from the tuple as it is no longer an emulator parameter. However, the set of parameters that are passed to `preprocess` within this function must remain the same so the existing parameters must be kept (even if they are made to fixed values). In the returned tuple, however, only the free emulator parameters should be listed and they should be listed in the same order as the emulator input.
+
+4. `n_input_features` is the number of input parametes to the emulator. It is currently tailored to mnuw0waCDM (including ln10As, ns, H0, ombh2, omch2, Mnu, w0, wa) and needs to be adjusted by the user if a different model is used.
+
+5. `df` initiates the dataframe which holds the parameters and the outputs. It is currently tailored to mnuw0waCDM and parameters must be removed/added depending on which parameters are allowed to vary by the emulator.
+
+6. `array_pars_in` is the list containing the parameter labels that are passed to `df`. The user must adjust this to ensure they are the same.
+
+7. NOTE: The inputs and outputs are normalized between -1 and 1 (based on the minimum/maximum values of the inputs and outputs) for emulator purposes and then are unnormalized at the end when the emulator prediction is computed. The minimum and maximum values are thus saved to file in advance.
+
+8. `NN_dict` initializes the neural network architecture. It reads in the file `nn_setup.json` (which the user needs to `cp` their directory in advance) which contains the number of hidden layers, the number of neurons in each layer, etc. The user needs to adjust these parameters beforehand depending on what their desired settings are. The current settings are not necessarily better and are simply placeholders.
