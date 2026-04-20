@@ -102,31 +102,10 @@ observable_file = "/pk_" * string(ℓ) * ".npy"
 param_file = "/effort_dict.json"
 add_observable!(df, location) = EmulatorsTrainer.add_observable_df!(df, location, param_file, observable_file, get_observable_tuple)
 
-### Added this here because the extra .dataset_metadata.json file appeared to mess things up ###
-### ASK MARCO WHETHER THIS FUNCTION CAN BE REMOVED OR WHETHER A CHANGE IS NEEDED #####
-function load_df_directory!(df::DataFrames.DataFrame, Directory::String,
-    add_observable_function::Function)
-    if !isdir(Directory)
-        throw(ArgumentError("Directory does not exist: $Directory"))
-    end
-    for (root, dirs, files) in walkdir(Directory)
-        for file in files
-            if endswith(file, ".json") && file != ".dataset_metadata.json"
-                # Call the add_observable function with the root directory
-                # Note: The actual function signature depends on which add_observable_df! variant is used
-                add_observable_function(df, root * "/")
-            end
-        end
-    end
-end
-############################
-
 # Initiates empty dataframe and adds results (must change which parameters are included here depending on model)
 df = DataFrame(z=Float64[], ln10A_s=Float64[], ns=Float64[], H0=Float64[], omega_b=Float64[], omega_cdm=Float64[], Mnu=Float64[], w0=Float64[], wa=Float64[], observable=Array[])
 @info PℓDirectory
-############################
-@time load_df_directory!(df, PℓDirectory, add_observable!)######EmulatorsTrainer.load_df_directory!(df, PℓDirectory, add_observable!)
-############################
+@time EmulatorsTrainer.load_df_directory!(df, PℓDirectory, add_observable!)
 
 # List of input parameters corresponding to the dataframe (must change depending on which model is used)
 array_pars_in = ["z", "ln10A_s", "ns", "H0", "omega_b", "omega_cdm", "Mnu", "w0", "wa"]
@@ -166,7 +145,7 @@ open(dest, "w") do file
 end
 
 
-# Adds supporting Effort files (for postprocessing and stochastic terms) to the trained emulator directory
+# Adds supporting Effort.jl files (for postprocessing and stochastic terms) to the trained emulator directory
 # for each multipole and component
 if Componentkind == "loop"
     dest = joinpath(folder_output, "postprocessing.py")
@@ -198,7 +177,7 @@ else
     @error "Unsupported multipole"
 end
 
-# Separately adds the supporting Effort files (for stochastic, biascombination, jacobian) to the
+# Separately adds the supporting Effort.jl files (for stochastic, biascombination, jacobian) to the
 # trained emulator directory for each multipole (not for each component separately)
 # Technically this duplicates the copying multiple times across 11,loop,ct versions but doesn't
 # matter because just copying the same file anyway (makes code cleaner)
