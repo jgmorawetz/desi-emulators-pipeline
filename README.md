@@ -80,4 +80,12 @@ This script performs the training itself after the data generation has finished.
 
 7. NOTE: The inputs and outputs are normalized between -1 and 1 (based on the minimum/maximum values of the inputs and outputs) for emulator purposes and then are unnormalized at the end when the emulator prediction is computed. The minimum and maximum values are thus saved to file in advance.
 
-8. `NN_dict` initializes the neural network architecture. It reads in the file `nn_setup.json` (which the user needs to `cp` their directory in advance) which contains the number of hidden layers, the number of neurons in each layer, etc. The user needs to adjust these parameters beforehand depending on what their desired settings are. The current settings are not necessarily better and are simply placeholders.
+8. `NN_dict` initializes the neural network architecture. It reads in the file `nn_setup.json` (which the user needs to `cp` their directory in advance) which contains the number of hidden layers, the number of neurons in each layer, etc. The user needs to adjust these parameters beforehand depending on what their desired settings are. The current settings are not necessarily optimal and are simply placeholders.
+
+9. The user must `cp` the output k vector file `kv.npy` to the directory beforehand so that it can be saved in the necessary emulator files. Again, the user has to modify this k vector to match that used in the data generation script.
+
+10. Several blocks of code copy the various supporting Effort.jl files (bias combinations, jacobians, stochastic terms, postprocessing) to their necessary folders within the trainer emulator directory. The user must `cp` all of these files in advance to their main directory in order for the scripts to run properly. (Caution: some of these files may have to change is fundamental changes are made to the emulator).
+
+11. `lr_list` specifies the different learning rates that the minimizations successively iterate through (and there are multiple runs for each). The user is free to vary these as well as the other hyperparameters such as batchsize and the number of iterations in total. These will vary depending on the desired accuracy from the user balanced with emulator accuracy.
+
+12. The `weights.npy` files are continuously saved away to the emulator folder as the test loss continues to improve. This is what Effort.jl later reads in when initializing the emulator and calculating predictions.
