@@ -33,4 +33,4 @@ home_dir="/global/homes/j/jgmorawe/emulators_pipeline"
 path_input="${home_dir}/effort_velocileptors_rept_mnuw0wacdm_50000"
 path_output="${home_dir}/trained_effort_velocileptors_rept_mnuw0wacdm_50000"
 
-julia "${home_dir}/training.jl --component="$component" --multipole="$multipole" --path_input="$path_input" --path_output="$path_output"
+julia "${home_dir}/training.jl" --component="$component" --multipole="$multipole" --path_input="$path_input" --path_output="$path_output"
