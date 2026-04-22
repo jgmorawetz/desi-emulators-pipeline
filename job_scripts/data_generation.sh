@@ -2,8 +2,8 @@
 #SBATCH --account=desi
 #SBATCH -C cpu
 #SBATCH -q regular
-#SBATCH --job-name=data_50000
-#SBATCH --time=06:00:00
+#SBATCH --job-name=data_200000
+#SBATCH --time=03:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --mem=300G
@@ -13,7 +13,7 @@ module load julia
 
 export JULIA_DEPOT_PATH=/global/homes/j/jgmorawe/.julia
 export JULIA_PROJECT=/global/homes/j/jgmorawe/emulators_pipeline
-export JULIA_WORKER_TIMEOUT=320
+export JULIA_WORKER_TIMEOUT=600
 export LC_ALL=C
 export LANG=C
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
