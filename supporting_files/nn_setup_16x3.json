@@ -1,0 +1,1 @@
+{"layers":{"layer_1":{"n_neurons":16,"activation_function":"tanh"},"layer_2":{"n_neurons":16,"activation_function":"tanh"},"layer_3":{"n_neurons":16,"activation_function":"tanh"}},"n_hidden_layers":3,"parameters":"z, ln10^10 As, ns, H0, omega_b, omega_c, Mnu, w0, wa."}
