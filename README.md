@@ -74,7 +74,7 @@ This script performs the training itself after the data generation has finished.
 
 3. The function `get_observable_tuple` takes in the cosmology parameters and the full power spectrum result and outputs the tuple of the parameters and the relevant component of the power spectrum. This is tailored currently to mnuw0waCDM, and the user needs to adjust if a different model is used. E.g. if neutrino mass is fixed, `Mν = cosmo_pars["Mnu"]` -> `Mν = 0.06` and remove the entry `cosmo_pars["Mnu"]` from the tuple as it is no longer an emulator parameter. However, the set of parameters that are passed to `preprocess` within this function must remain the same so the existing parameters must be kept (even if they are made to fixed values). In the returned tuple, however, only the free emulator parameters should be listed and they should be listed in the same order as the emulator input.
 
-4. `n_input_features` is the number of input parametes to the emulator. It is currently tailored to mnuw0waCDM (including ln10As, ns, H0, ombh2, omch2, Mnu, w0, wa) and needs to be adjusted by the user if a different model is used.
+4. `n_input_features` is the number of input parameters to the emulator. It is currently tailored to mnuw0waCDM (including z, ln10As, ns, H0, ombh2, omch2, Mnu, w0, wa) and needs to be adjusted by the user if a different model is used.
 
 5. `df` initiates the dataframe which holds the parameters and the outputs. It is currently tailored to mnuw0waCDM and parameters must be removed/added depending on which parameters are allowed to vary by the emulator.
 
@@ -82,7 +82,7 @@ This script performs the training itself after the data generation has finished.
 
 7. NOTE: The inputs and outputs are normalized between -1 and 1 (based on the minimum/maximum values of the inputs and outputs) for emulator purposes and then are unnormalized at the end when the emulator prediction is computed. The minimum and maximum values are thus saved to file in advance.
 
-8. `NN_dict` initializes the neural network architecture. It reads in the file `nn_setup.json` (which the user needs to `cp` their directory in advance) which contains the number of hidden layers, the number of neurons in each layer, etc. The user needs to adjust these parameters beforehand depending on what their desired settings are. The current settings are not necessarily optimal and are simply placeholders.
+8. `NN_dict` initializes the neural network architecture. It reads in the file `nn_setup_path` (which is one of the arguments passed to the job script) which contains the number of hidden layers, the number of neurons in each layer, etc. The user needs to adjust these parameters beforehand depending on what their desired settings are. The current settings are not necessarily optimal and are simply placeholders.
 
 9. The user must `cp` the output k vector file `kv.npy` to the directory beforehand so that it can be saved in the necessary emulator files. Again, the user has to modify this k vector to match that used in the data generation script.
 
