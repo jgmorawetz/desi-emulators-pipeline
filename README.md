@@ -31,7 +31,7 @@ Pkg.build("PyCall")
 exit()
 ```
 
-5. To install the remainder of the necessary packages, run the following commands (the files `Project.toml` and `Manifest.toml` files needed are already located in the folder):
+5. To install the remainder of the necessary packages, run the following commands (the `Project.toml` and `Manifest.toml` files needed are already located in the folder):
 ```
 julia
 using Pkg
