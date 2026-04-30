@@ -17,7 +17,9 @@ pip install git+https://github.com/marcobonici/velocileptors_free.git
 ```
 2. Run ```which python``` and copy/paste the folder path (will be needed later).
 
-3. Open a new terminal and `cd` to the folder where you started, and run the following steps. In the line `ENV["PYTHON"]`, paste the directory path that was copied from step 2.
+3. Open a new terminal and clone this repository `git clone https://github.com/jgmorawetz/desi-emulators-pipeline.git`.
+
+4. `cd` to the folder `desi-emulators-pipeline`, and run the following steps. In the line `ENV["PYTHON"]`, paste the directory path that was copied from step 2.
 ```
 module load julia
 julia
@@ -29,7 +31,7 @@ Pkg.build("PyCall")
 exit()
 ```
 
-4. To install the remainder of the necessary packages, `cp` the `Project.toml` and `Manifest.toml` files to your directory, and run the following commands:
+5. To install the remainder of the necessary packages, run the following commands (the files `Project.toml` and `Manifest.toml` files needed are already located in the folder):
 ```
 julia
 using Pkg
