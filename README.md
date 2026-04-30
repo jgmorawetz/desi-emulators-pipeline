@@ -40,7 +40,7 @@ Pkg.instantiate()
 exit()
 ```
 
-## Scripts (run within job scripts)
+## Julia codes
 
 #### data_generation.jl
 This script generates samples prior to the training process (inputs are cosmological parameters and outputs are the statistics). The existing code is tailored to the mnuw0waCDM extension but it can be generalized to any model of interest. Here are instructions for how to modify the script to accomodate any model:
@@ -93,7 +93,7 @@ This script performs the training itself after the data generation has finished.
 12. The `weights.npy` files are continuously saved away to the emulator folder as the test loss continues to improve. This is what Effort.jl later reads in when initializing the emulator and calculating predictions.
 
 
-## Job Scripts (submitted directly from terminal)
+## Job scripts (submitted directly from terminal)
 
 #### data_generation.sh
 This is the first job script the user should run. It runs the code found in `data_generation.jl`. The slurm settings may need to be adjusted (e.g. account, qos, job name, time, number tasks, cpus per task, memory per cpu, etc). Importantly though, `ntasks` sets the number of workers for parallelization. The other parameters should be set appropriately based on this. Additional, the folder paths for `JULIA_DEPOT_PATH` and `JULIA_PROJECT` must be changed by the user for their own environment. Other aspects of the script can be changed if the user deems necessary. Ensure in advance that the chosen directory name for the emulator training set folder does not already exist otherwise it will cause an error. NOTE: After the data generation job is completed, run `rm .dataset_metadata.json` in the outer folder containing the emulator results. This additional file is unnecessary and should be removed to avoid causing problems for the training code.
