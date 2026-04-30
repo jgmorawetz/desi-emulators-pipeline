@@ -2,7 +2,7 @@
 #SBATCH --account=desi
 #SBATCH -C cpu
 #SBATCH -q regular
-#SBATCH --job-name=data_200000
+#SBATCH --job-name=data_gen
 #SBATCH --time=03:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
