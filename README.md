@@ -53,7 +53,7 @@ This script generates samples prior to the training process (inputs are cosmolog
 
 4. The three lines below `s = EmulatorsTrainer.create_training_dataset(n, lb, ub)` filter out unphysical samples (w0+wa>0). Because of this, the actual number of training samples will be less than `n` in practice. Note that the indices 8,9 are currently tailored for mnuw0wacdm so these indices will have to be changed manually depending where w0,wa are found in the input vector (or removed altogether if w0,wa is not part of the model)!
 
-5. `root_dir` is the directory where the training samples will be stored. The directory needs to be changed to match your installed environment. And the title for the emulator folder itself should ideally be labelled with the code/model/number of training samples (not a requirement, but important for preventing overwriting or confusing different emulators).
+5. `root_dir` is the directory where the training samples will be stored. The directory should be in your scratch folder as there are a large number of files stored. The title for the folder should ideally be labelled with the code/model/number of training samples (not a requirement, but important for preventing overwriting or confusing different emulators).
 
 6. The emulator output k grid `kv_target` was selected to provide sufficient resolution (for interpolation purposes) across different scales but not unnecessarily high as this reduces emulator accuracy. The resolution is chosen to get coarser at higher k to avoid contributing disproportionately to the cost function. However, the choice is completely arbitrary and the user is welcome to modify as desired.
 
