@@ -113,7 +113,7 @@ end
                 npzwrite(rand_str * "/pk_2.npy", PT.p2ktable)
                 npzwrite(rand_str * "/pk_4.npy", PT.p4ktable)
                 open(rand_str * "/effort_dict.json", "w") do io
-                    JSON3.write(io, CosmoDict)
+                     JSON3.write(io, CosmoDict)
                 end
             end
         catch e
