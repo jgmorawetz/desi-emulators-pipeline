@@ -1,6 +1,6 @@
 # desi-emulators-pipeline
 
-This repository contains the files and scripts necessary for training neural network emulators on the NERSC supercomputer.
+This repository contains the files and scripts necessary for training neural network emulators on the NERSC supercomputer. There are three folders `Effort`, `Capse`, `ACE` each containing Julia codes, job scripts, supporting files and notebooks.
 
 ## Installation
 
@@ -40,7 +40,9 @@ Pkg.instantiate()
 exit()
 ```
 
-## Julia codes
+## Effort (EFTofLSS power spectrum multipoles)
+
+### Julia codes
 
 #### data_generation.jl
 This script generates samples prior to the training process (inputs are cosmological parameters and outputs are the statistics). The existing code is tailored to the mnuw0waCDM extension but it can be generalized to any model of interest. Here are instructions for how to modify the script to accomodate any model:
@@ -62,7 +64,6 @@ This script generates samples prior to the training process (inputs are cosmolog
 8. NOTE: To avoid issues with interpolation, we have modified the original `velocileptors` repository (to `velocileptors_free` which is installed in the environment) to allow the freedom to pass our own k grid manually (the original code sets logarithmic spacing by default), so the line calling `EPT.REPT` uses slightly different arguments than original velocileptors.
 
 9. Currently, the emulator computes the power spectrum without the AP effect incorporated (sets apar=aperp=1 in the code), so the AP must be applied analytically in your theory code (Effort.jl has the necessary functions to do this). But if desired, the AP can be reincorporated by calculating the AP parameters and applying them to the line `PT.compute_redshift_space_power_multipoles_tables`.
-
 
 
 #### training.jl
@@ -93,7 +94,7 @@ This script performs the training itself after the data generation has finished.
 12. The `weights.npy` files are continuously saved away to the emulator folder as the test loss continues to improve. This is what Effort.jl later reads in when initializing the emulator and calculating predictions.
 
 
-## Job scripts (submitted directly from terminal)
+### Job scripts (submitted directly from terminal)
 
 #### data_generation.sh
 This is the first job script the user should run. It runs the code found in `data_generation.jl`. The slurm settings may need to be adjusted (e.g. account, qos, job name, time, number nodes, ntasks per node, memory, etc). Currently, the settings request all cores available on a single node (given that the full node is charged under the current qos=regular setting). The other parameters should be set appropriately based on this. Additional, the folder paths for `JULIA_DEPOT_PATH` and `JULIA_PROJECT` must be changed by the user for their own environment (the latter is set to the `desi-emulators-pipeline` folder). Other aspects of the script can be changed if the user deems necessary. Ensure in advance that the chosen directory name for the emulator training set folder does not already exist otherwise it will cause an error. NOTE: After the data generation job is completed, run `rm .dataset_metadata.json` in the outer folder containing the emulator results. This additional file is unnecessary and should be removed to avoid causing problems for the training code.
