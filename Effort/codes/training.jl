@@ -60,8 +60,8 @@ batchsize = parsed_args["batchsize"]
 @info OutDirectory
 @info Componentkind
 
-# The length of the k grid (this must be changed if a different k grid is used)
-global nk = 60
+# The length of the k grid (automatically extracts by reading in one of the data training samples)
+global nk = length(npzread(joinpath(PℓDirectory, readdir(PℓDirectory)[1], "kv.npy")))
 
 # The output size depends on which component is being computed (based on EFT expansion)
 if Componentkind == "11"
@@ -117,8 +117,8 @@ function get_observable_tuple(cosmo_pars, Pk)
             reshape_Pk(Pk, factor))
 end
 
-# The number of input features (must be changed if a different model is used)
-n_input_features = 9
+# The number of input features (automatically extracts by reading in one of the data training samples)
+n_input_features = length(JSON.parsefile(joinpath(PℓDirectory, readdir(PℓDirectory)[1], "effort_dict.json")))
 n_output_features = nk * nk_factor
 
 # Function for adding observable to dataframe
@@ -147,7 +147,7 @@ npzwrite(folder_output * "/outminmax.npy", out_MinMax)
 EmulatorsTrainer.maximin_df!(df, in_MinMax, out_MinMax)
 
 
-# Initializes the neural network architecture (must created setup .json file in advance, sample version found in github)
+# Initializes the neural network architecture (must create setup .json file in advance, sample version found in github)
 # and need to adjust path accordingly
 NN_dict = JSON.parsefile(nn_setup_path)
 NN_dict["n_output_features"] = n_output_features
@@ -161,7 +161,7 @@ G = SimpleChains.alloc_threaded_grad(mlpd)
 
 # Saves the k vector and the modified setup .json file
 dest = joinpath(folder_output, "k.npy")
-run(`cp kv.npy $dest`)
+npzwrite(dest, npzread(joinpath(PℓDirectory, readdir(PℓDirectory)[1], "kv.npy")))
 dest = joinpath(folder_output, "nn_setup.json")
 json_str = JSON.json(NN_dict)
 open(dest, "w") do file
@@ -173,30 +173,30 @@ end
 # for each multipole and component
 if Componentkind == "loop"
     dest = joinpath(folder_output, "postprocessing.py")
-    run(`cp postprocessing_loop.py $dest`)
+    run(`cp Effort/supporting_files/postprocessing_loop.py $dest`)
     dest = joinpath(folder_output, "postprocessing.jl")
-    run(`cp postprocessing_loop.jl $dest`)
+    run(`cp Effort/supporting_files/postprocessing_loop.jl $dest`)
 else
     dest = joinpath(folder_output, "postprocessing.py")
-    run(`cp postprocessing.py $dest`)
+    run(`cp Effort/supporting_files/postprocessing.py $dest`)
     dest = joinpath(folder_output, "postprocessing.jl")
-    run(`cp postprocessing.jl $dest`)
+    run(`cp Effort/supporting_files/postprocessing.jl $dest`)
 end
 if ℓ == 0
     dest = joinpath(folder_output, "stochmodel.py")
-    run(`cp stochmodel_0.py $dest`)
+    run(`cp Effort/supporting_files/stochmodel_0.py $dest`)
     dest = joinpath(folder_output, "stochmodel.jl")
-    run(`cp stochmodel_0.jl $dest`)
+    run(`cp Effort/supporting_files/stochmodel_0.jl $dest`)
 elseif ℓ == 2
     dest = joinpath(folder_output, "stochmodel.py")
-    run(`cp stochmodel_2.py $dest`)
+    run(`cp Effort/supporting_files/stochmodel_2.py $dest`)
     dest = joinpath(folder_output, "stochmodel.jl")
-    run(`cp stochmodel_2.jl $dest`)
+    run(`cp Effort/supporting_files/stochmodel_2.jl $dest`)
 elseif ℓ == 4
     dest = joinpath(folder_output, "stochmodel.py")
-    run(`cp stochmodel_4.py $dest`)
+    run(`cp Effort/supporting_files/stochmodel_4.py $dest`)
     dest = joinpath(folder_output, "stochmodel.jl")
-    run(`cp stochmodel_4.jl $dest`)
+    run(`cp Effort/supporting_files/stochmodel_4.jl $dest`)
 else
     @error "Unsupported multipole"
 end
@@ -206,28 +206,28 @@ end
 # Technically this duplicates the copying multiple times across 11,loop,ct versions but doesn't
 # matter because just copying the same file anyway (makes code cleaner)
 dest = joinpath(folder_output_before, "biascombination.py")
-run(`cp biascombination.py $dest`)
+run(`cp Effort/supporting_files/biascombination.py $dest`)
 dest = joinpath(folder_output_before, "biascombination.jl")
-run(`cp biascombination.jl $dest`)
+run(`cp Effort/supporting_files/biascombination.jl $dest`)
 dest = joinpath(folder_output_before, "jacbiascombination.py")
-run(`cp jacbiascombination.py $dest`)
+run(`cp Effort/supporting_files/jacbiascombination.py $dest`)
 dest = joinpath(folder_output_before, "jacbiascombination.jl")
-run(`cp jacbiascombination.jl $dest`)
+run(`cp Effort/supporting_files/jacbiascombination.jl $dest`)
 if ℓ == 0
     dest = joinpath(folder_output_before, "stochmodel.py")
-    run(`cp stochmodel_0.py $dest`)
+    run(`cp Effort/supporting_files/stochmodel_0.py $dest`)
     dest = joinpath(folder_output_before, "stochmodel.jl")
-    run(`cp stochmodel_0.jl $dest`)
+    run(`cp Effort/supporting_files/stochmodel_0.jl $dest`)
 elseif ℓ == 2
     dest = joinpath(folder_output_before, "stochmodel.py")
-    run(`cp stochmodel_2.py $dest`)
+    run(`cp Effort/supporting_files/stochmodel_2.py $dest`)
     dest = joinpath(folder_output_before, "stochmodel.jl")
-    run(`cp stochmodel_2.jl $dest`)
+    run(`cp Effort/supporting_files/stochmodel_2.jl $dest`)
 elseif ℓ == 4
     dest = joinpath(folder_output_before, "stochmodel.py")
-    run(`cp stochmodel_4.py $dest`)
+    run(`cp Effort/supporting_files/stochmodel_4.py $dest`)
     dest = joinpath(folder_output_before, "stochmodel.jl")
-    run(`cp stochmodel_4.jl $dest`)
+    run(`cp Effort/supporting_files/stochmodel_4.jl $dest`)
 else
     @error "Unsupported multipole"
 end
