@@ -5,8 +5,8 @@
 #SBATCH --job-name=training
 #SBATCH --time=24:00:00
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=3G
+#SBATCH --cpus-per-task=4
+#SBATCH --mem-per-cpu=5G
 #SBATCH --array=0-8
 
 sleep $((SLURM_ARRAY_TASK_ID * 30))
@@ -29,12 +29,13 @@ PARAM_SET=(${PARAMS[$SLURM_ARRAY_TASK_ID]})
 component="${PARAM_SET[0]}"
 multipole="${PARAM_SET[1]}"
 
-home_dir="/global/homes/j/jgmorawe/emulators_pipeline"
-path_input="${home_dir}/effort_velocileptors_rept_mnuw0wacdm_50000"
-path_output="${home_dir}/trained_effort_velocileptors_rept_mnuw0wacdm_50000"
-nn_setup_path="${home_dir}/nn_setup_32x4.json"
+home_dir="/global/homes/j/jgmorawe/desi-emulators-pipeline"
+scratch_dir="/pscratch/sd/j/jgmorawe"
+path_input="${scratch_dir}/effort_velocileptors_rept_mnuw0wacdm_200000"
+path_output="${home_dir}/trained_effort_velocileptors_rept_mnuw0wacdm_200000"
+nn_setup_path="${home_dir}/Effort/supporting_files/nn_setup.json"
 n_epoch=2000
 n_run=20
-batchsize=256
+batchsize=512
 
-julia "${home_dir}/training.jl" --component="$component" --multipole="$multipole" --path_input="$path_input" --path_output="$path_output" --nn_setup_path="$nn_setup_path" --n_epoch=$n_epoch --n_run=$n_run --batchsize=$batchsize
+julia -t $SLURM_CPUS_PER_TASK  "${home_dir}/Effort/codes/training.jl" --component="$component" --multipole="$multipole" --path_input="$path_input" --path_output="$path_output" --nn_setup_path="$nn_setup_path" --n_epoch=$n_epoch --n_run=$n_run --batchsize=$batchsize
