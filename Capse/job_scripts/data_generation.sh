@@ -24,4 +24,4 @@ export JULIA_TOTAL_TASKS=$(
   scontrol show job "$SLURM_JOB_ID" | tr ' ' '\n' | grep -m1 '^NumTasks=' | cut -d= -f2
 )
 
-srun -N1 -n1 --mpi=none --cpu-bind=none --overlap julia --project=$JULIA_PROJECT data_generation_capse.jl
+srun -N1 -n1 --mpi=none --cpu-bind=none --overlap julia --project=$JULIA_PROJECT Capse/codes/data_generation.jl
