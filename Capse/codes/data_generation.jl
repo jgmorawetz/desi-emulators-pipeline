@@ -25,10 +25,10 @@ end
     ub = [3.7, 1.1, 90, 0.025, 0.18, 0.15, 0.5, 1, 2]
 
     # Specify the desired number of data samples (note: if w0wa extension is considered, some samples will be discarded for w0+wa>0)
-    n = 50000
+    n = 200000
 
     # Specify the random seed for reproducibility purposes (or set to nothing otherwise)
-    seed = 0
+    seed = nothing
     if seed != nothing
         Random.seed!(seed)
     end
