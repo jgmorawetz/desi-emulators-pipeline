@@ -67,6 +67,7 @@ This script generates samples prior to the training process (inputs are cosmolog
 
 9. Currently, the emulator computes the power spectrum without the AP effect incorporated (sets apar=aperp=1 in the code), so the AP must be applied analytically in your theory code (Effort.jl has the necessary functions to do this). But if desired, the AP can be reincorporated by calculating the AP parameters and applying them to the line `PT.compute_redshift_space_power_multipoles_tables`.
 
+10. IMPORTANT: After generating the training samples, due to numerical instabilities there may be spurious samples which are "way off" compared to the remaining of the sames (in terms of their statistic values) and these need to be filtered out in advance and removed, otherwise the min/max normalization in the training process will cause all the normal terms of become subdominant in the training process and distort results.
 
 #### training.jl
 This script performs the training itself after the data generation has finished. The existing code is again tailored to the mnuw0waCDM extension but it can be generalized to any model of interest. Here are instructions for how to modify the script to accomodate any model:
