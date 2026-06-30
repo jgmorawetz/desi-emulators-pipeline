@@ -11,66 +11,26 @@ First, we must create an environment which permits the use of PyCall within Juli
 1. 
 ```
 module load python
-```
-```
 conda create -n classy_env python=3.10 -y
-```
-```
 conda activate classy_env
-```
-```
 pip install numpy scipy cython
-```
-```
 pip install classy
-```
-```
 pip install git+https://github.com/marcobonici/velocileptors_free.git
 ```
 2. Run ```which python``` and copy the folder path (will be needed later).
 
 3. Open a new terminal and clone this repository `git clone https://github.com/jgmorawetz/desi-emulators-pipeline.git`.
 
-4. `cd` to the folder `desi-emulators-pipeline`, and run the following steps. In the line `ENV["PYTHON"]`, paste the directory path that was copied from step 2.
+4. `cd` to the folder `desi-emulators-pipeline`, and run the following steps. In the line `ENV["PYTHON"]`, paste the directory path that was copied from step 2. To install the remainder of the necessary packages, run the following commands (the `Project.toml` and `Manifest.toml` files needed are already located in the folder):
 ```
 module load julia
-```
-```
 julia
-```
-```
 using Pkg
-```
-```
 Pkg.activate(".")
-```
-```
 Pkg.add("PyCall")
-```
-```
 ENV["PYTHON"] = <which-python-folder-path>
-```
-```
 Pkg.build("PyCall")
-```
-```
-exit()
-```
-
-5. To install the remainder of the necessary packages, run the following commands (the `Project.toml` and `Manifest.toml` files needed are already located in the folder):
-```
-julia
-```
-```
-using Pkg
-```
-```
-Pkg.activate(".")
-```
-```
 Pkg.instantiate()
-```
-```
 exit()
 ```
 
