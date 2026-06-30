@@ -17,7 +17,7 @@ pip install numpy scipy cython
 pip install classy
 pip install git+https://github.com/marcobonici/velocileptors_free.git
 ```
-2. Run ```which python``` and copy/paste the folder path (will be needed later).
+2. Run ```which python``` and copy the folder path (will be needed later).
 
 3. Open a new terminal and clone this repository `git clone https://github.com/jgmorawetz/desi-emulators-pipeline.git`.
 
