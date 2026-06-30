@@ -21,18 +21,7 @@ pip install git+https://github.com/marcobonici/velocileptors_free.git
 
 3. Open a new terminal and clone this repository `git clone https://github.com/jgmorawetz/desi-emulators-pipeline.git`.
 
-4. `cd` to the folder `desi-emulators-pipeline`, and run the following steps. In the line `ENV["PYTHON"]`, paste the directory path that was copied from step 2. To install the remainder of the necessary packages, run the following commands (the `Project.toml` and `Manifest.toml` files needed are already located in the folder):
-```
-module load julia
-julia
-using Pkg
-Pkg.activate(".")
-Pkg.add("PyCall")
-ENV["PYTHON"] = <which-python-folder-path>
-Pkg.build("PyCall")
-Pkg.instantiate()
-exit()
-```
+4. `cd` to the folder `desi-emulators-pipeline`, and modify the script `install_julia_environment.jl` by pasting the directory path that was copied from step 2. This step installs the Julia environment and ensures the necessary dependencies are satisfied (the `Project.toml` and `Manifest.toml` files needed are already located in the folder).
 
 ## Effort (EFTofLSS power spectrum multipoles)
 
