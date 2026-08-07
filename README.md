@@ -1,6 +1,6 @@
 # desi-emulators-pipeline
 
-This repository contains the files and scripts necessary for training neural network emulators on the NERSC supercomputer. There are three folders `Effort`, `Capse`, `ACE` each containing Julia codes, job scripts, supporting files and notebooks.
+This repository contains the files and scripts necessary for training neural network emulators on the NERSC supercomputer. There are four folders `Effort`, `Capse`, `ACE`, `Mapse` each containing Julia codes, job scripts, supporting files and notebooks.
 
 Important: Many of the settings listed in the current versions of the codes/job scripts are not final/optimized fully (things like the number of training samples, emulator hyperparameters, slurm job settings may need to be adjusted depending on the accuracy/time constraints for the user training the emulator). It is recommend to start out by training an emulator with fewer samples to ensure that everything works and then proceed to larger cases. It is also the user's responsibility to ensure the emulator is free of potential bugs/problems by comparing the emulator outputs with the theory code of interest.
 
