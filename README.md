@@ -213,5 +213,3 @@ Once ready, the user simply runs: ```sbatch Mapse/job_scripts/data_generation.sh
 This is the analogous script to the training.sh job script from Effort. It runs the code found in `training.jl` but for Mapse instead. This time, however, the array jobs are split based on component kind (`cb` or `mm`). As such, similar to the Effort case, the user must `mkdir` the output path in advance before running the script, and the user must `mkdir` subfolders: `Pk_lin_cb`, `Pk_lin_mm` (where the data for each component is stored) within this outer folder. And similarly, the user can adjust hyperparameters such as the number of epochs, number of runs and batchsize depending on the desired training settings.
 
 Once ready, the user simply runs: ```sbatch Mapse/job_scripts/training.sh``` from the `desi-emulators-pipeline` folder.
-#### data_generation.sh
-
