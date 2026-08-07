@@ -126,7 +126,7 @@ This is the analogous script to the data_generation.sh job script from Effort. I
 Once ready, the user simply runs: ```sbatch Capse/job_scripts/data_generation.sh``` from the `desi-emulators-pipeline` folder.
 
 #### training.sh
-This is the analogous script to the training.sh job script from Effort. It runs the code found in `training.jl` but for Capse instead. Similar to the data generation script, more resources will have to be used since the CMB emulator takes longer to train. The current settings are just set for a smaller emulator but will need to be adjusted for larger training samples. This time, however, the array jobs are split based on component kind (`TT`, `EE`, `TE` or `PP`). As such, similar to the Effort case, the user must `mkdir` the output path in advance before running the script, and the user must `mkdir` three subfolders: `TT`, `EE`, `TE`, `PP` (where the data for each component is stored) within this outer folder. And similarly, the user can adjust hyperparameters such as the number of epochs, number of runs and batchsize depending on the desired training settings.
+This is the analogous script to the training.sh job script from Effort. It runs the code found in `training.jl` but for Capse instead. Similar to the data generation script, more resources will have to be used since the CMB emulator takes longer to train. The current settings are just set for a smaller emulator but will need to be adjusted for larger training samples. This time, however, the array jobs are split based on component kind (`TT`, `EE`, `TE` or `PP`). As such, similar to the Effort case, the user must `mkdir` the output path in advance before running the script, and the user must `mkdir` four subfolders: `TT`, `EE`, `TE`, `PP` (where the data for each component is stored) within this outer folder. And similarly, the user can adjust hyperparameters such as the number of epochs, number of runs and batchsize depending on the desired training settings.
 
 Once ready, the user simply runs: ```sbatch Capse/job_scripts/training.sh``` from the `desi-emulators-pipeline` folder.
 
@@ -169,3 +169,49 @@ Once ready, the user simply runs: ```sbatch ACE/job_scripts/data_generation.sh``
 This is the analogous script to the training.sh job script from Effort. It runs the codes found in `training_ln10As_basis.jl` and `training_sigma8_basis.jl` but for ACE instead. This time, however, the array jobs are split based on the two versions of the emulator (one in ln10As basis and one in sigma8 basis). As such, similar to the Effort case, the user must `mkdir` the output path in advance before running the script. And similarly, the user can adjust hyperparameters such as the number of epochs, number of runs and batchsize depending on the desired training settings.
 
 Once ready, the user simply runs: ```sbatch ACE/job_scripts/training.sh``` from the `desi-emulators-pipeline` folder.
+
+
+## Mapse (emulating the linear matter power spectrum)
+
+### Julia codes
+
+#### data_generation.jl
+This script generates samples prior to the training process (inputs are cosmological parameters and outputs are the statistics). The existing code is tailored to the mnuw0waCDM extension but it can be generalized to any model of interest. The instructions are very similar to those for the Effort emulators with a few changes:
+
+1. Complete the same steps 1-5 from the Effort version. The folder path should also be adjusted since it is for a Mapse class emulator not Effort velocileptors anymore.
+
+2. `nk` and `k_grid` represent the number of entries in the (log spaced) k grid and the k grid itself. These can be adjusted if needed.
+
+3. Step 7 is the same as from Effort, but with the `classy_script` function replacing the role of `velocileptors_script`. The `cosmo_params` dictionary again contains the parameters needing to be specified in Class. In this case, the parameters (H0, ombh2, omch2, Mnu, w0, wa) are allowed to vary freely (z also varies freely but isn't part of this specific dictionary). However, primordial parameters ln10As, ns are fixed here because they are not included in the emulator and are instead computed analytically. And the user will need to modify this if a different model is used.
+
+4. Note that the current version of the emulator saves as outputs for each set of cosmological parameters both the `cb` and `mm` components of the power Pk.
+
+#### training.jl
+This script performs the training itself after the data generation has finished. The existing code is again tailored to the mnuw0waCDM extension but it can be generalized to any model of interest. The instructions are very similar to those for the Effort emulators with a few changes:
+
+1. While Step 1 doesn't exist in that the `preprocess` function no longer explicitly exists, but the first step in the training is to add the varying cosmological parameters as well as the transfer function (the original spectrum divided by the primordial spectrum, the growth factor squared, etc.) to the arrays `features` and `targets` respectively.
+
+2. Here, we also perform a principal component analysis (PCA) on the singular value decomposition (SVD) of the processed training samples above after subtracting off the mean of the statistic. We then calculate the required number of elements to keep such that the cumulative variance exceeds a certain threshold (e.g. 0.999999) above which little information is gained by including the remaining elements. This is beneficial as it allows for a lower dimensional output for the network which works to improve accuracy. After this, the mean and PCA basis vectors `pca_mean` and `pca_basis` with the desired number of elements are stored above for later postprocessing.
+
+3. Step 2 no longer exists in that the `get_observable_tuple` function no longer explicitly exists, but this step is implicitly incorporated into the steps described above.
+
+4. Steps 3-6 are similar to Effort.
+
+5. Step 7 has changed in that for the newest version of Mapse.jl, the pre and postprocessing steps when the emulator is read in and used are done automatically within the package itself and do not require these pre and post processing files. See the test_mapse.ipynb notebook for how to run the emulator after it is trained.
+
+6. Steps 8-9 are similar to Effort.
+
+
+### Job scripts (submitted directly from terminal)
+
+#### data_generation.sh 
+This is the analogous script to the data_generation.sh job script from Effort. It runs the code found in `data_generation.jl` but for Mapse instead. Note that the computations for the data generation are less computationally intensive than Effort as it is only the linear power and not the EFT computations, so fewer resources are generally needed to run the code. Otherwise, follow all the same steps for the analogous Effort version (including making sure the folder path for the trained emulator does not already exist).
+
+Once ready, the user simply runs: ```sbatch Mapse/job_scripts/data_generation.sh``` from the `desi-emulators-pipeline` folder.
+
+#### training.sh
+This is the analogous script to the training.sh job script from Effort. It runs the code found in `training.jl` but for Mapse instead. This time, however, the array jobs are split based on component kind (`cb` or `mm`). As such, similar to the Effort case, the user must `mkdir` the output path in advance before running the script, and the user must `mkdir` subfolders: `Pk_lin_cb`, `Pk_lin_mm` (where the data for each component is stored) within this outer folder. And similarly, the user can adjust hyperparameters such as the number of epochs, number of runs and batchsize depending on the desired training settings.
+
+Once ready, the user simply runs: ```sbatch Mapse/job_scripts/training.sh``` from the `desi-emulators-pipeline` folder.
+#### data_generation.sh
+
