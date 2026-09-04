@@ -16,7 +16,7 @@ using LinearAlgebra
 config = ArgParseSettings()
 @add_arg_table config begin
     "--emulator_type"
-    help = "Specify which emulator type to create: 'effort', 'ace', 'capse', 'mapse'."
+    help = "Specify which emulator type to create: 'effort_velocileptors', 'effort_folps', 'ace', 'capse', 'mapse'."
     arg_type = String
     required = true
     "--parameters"
@@ -76,6 +76,17 @@ addprocs(mgr)
 end
 
 @everywhere begin
+    random_seed = $random_seed
+    n_samples = $n_samples
+    parameters = $parameters
+    lower_bounds = $lower_bounds
+    upper_bounds = $upper_bounds
+    emulator_type = $emulator_type
+    root_dir = $root_dir
+    k_grid_path = $k_grid_path
+end
+
+@everywhere begin
     # Generates the latin hypercube samples
     if random_seed != nothing
         Random.seed!(random_seed)
@@ -93,15 +104,16 @@ end
     # Imports necessary python packages from PyCall
     np = pyimport("numpy")
     classy = pyimport("classy")
-    velocileptors = pyimport("velocileptors_free")
+    EPT = pyimport("velocileptors_free.EPT.ept_fullresum_fftw")
+    UTILS = pyimport("velocileptors_free.Utils.pnw_dst")
 
 
-    function classy_script(cosmo_dict, root_dir)
+    function classy_script(cosmo_dict, root_path)
         """
         Function to generate the necessary data samples for the given set of cosmological parameters.
         Arguments:
             'cosmo_dict' -> The dictionary of cosmological parameters associated with the particular data sample.
-            'emulator_type' -> Either "effort", "ace", "capse", "mapse" (needed to determine which inputs to apply in class and which outputs to save).
+            'root_path' -> The folder path where the data samples will be stored.
         """ 
         try
             rand_str = root_path * "/" * randstring(10) # creates folder path for this particular data sample
@@ -125,14 +137,14 @@ end
             cosmo_params = Dict("ln10^{10}A_s" => ln10As, "n_s" => ns, "h" => h, "omega_b" => ombh2, "omega_cdm" => omch2, 
                                 "w0_fld" => w0, "wa_fld" => wa, "use_ppf" => "yes", "fluid_equation_of_state" => "CLP", "cs2_fld" => 1, "Omega_Lambda" => 0, "Omega_scf" => 0,
                                 "Neff" => 3.044, "N_ncdm" => N_ncdm, "m_ncdm" => m_ncdm)
-            if emulator_type in ["effort", "ace"]
+            if emulator_type in ["effort_velocileptors", "effort_folps", "ace"]
                 cosmo_params["output"] = "mPk"
                 cosmo_params["z_pk"] = string(z)
-                cosmo_params["P_k_max_h/Mpc"] => 20
+                cosmo_params["P_k_max_h/Mpc"] = 20
             elseif emulator_type == "mapse"
                 cosmo_params["output"] = "mPk"
                 cosmo_params["z_pk"] = string(z)
-                cosmo_params["P_k_max_1/Mpc"] => 15
+                cosmo_params["P_k_max_1/Mpc"] = 15
             elseif emulator_type == "capse"
                 cosmo_params["output"] = "tCl pCl lCl"
                 cosmo_params["l_max_scalars"] = 10000
@@ -148,16 +160,16 @@ end
             cosmo.compute()
 
             # Computes and saves different statistics depending which emulator being used
-            if emulator_type == "effort"
+            if emulator_type == "effort_velocileptors"
                 # Computes the EFT loop table given the linear matter power spectrum
                 konhmin, konhmax, nk = 1e-4, 10, 20000
                 konh = np.logspace(np.log10(konhmin), np.log10(konhmax), nk)
                 ktarget = npzread(k_grid_path) # desired emulator grid
                 f = cosmo.scale_independent_growth_factor_f(z)
                 plin = [cosmo.pk_cb(k * h, z) * h^3 for k in konh]
-                knw, Pnw = velocileptors.Utils.pnw_dst.pnw_dst(konh, plin)
-                PT = velocileptors.EPT.ept_fullresum_fftw.REPT(knw, plin, pnw=Pnw, kvec=ktarget, beyond_gauss=true, one_loop=true, N=2000, # currently uses velocileptors_free version but need to change if repos get merged!
-                                                            extrap_min=-6, extrap_max=2, cutoff=100, threads=1)
+                knw, Pnw = UTILS.pnw_dst(konh, plin)
+                PT = EPT.REPT(knw, plin, pnw=Pnw, kvec=ktarget, beyond_gauss=true, one_loop=true, N=2000, # currently uses velocileptors_free version but need to change if repos get merged!
+                              extrap_min=-6, extrap_max=2, cutoff=100, threads=1)
                 PT.compute_redshift_space_power_multipoles_tables(f, apar=1, aperp=1, ngauss=4) # computes without AP (emulator incorporates analytically)
                 if any(isnan, PT.p0ktable) || any(isnan, PT.p2ktable) || any(isnan, PT.p4ktable)
                     @error "There are nan values!"
@@ -171,6 +183,9 @@ end
                         JSON3.write(io, cosmo_dict)
                     end
                 end
+
+            #elseif emulator_type == "effort folps"
+            #end
 
             elseif emulator_type == "ace"
                 # Computes background quantities (sigma8, sigma8(z), rs_drag, H(z), r(z), D(z), f(z))
