@@ -16,7 +16,7 @@ using LinearAlgebra
 config = ArgParseSettings()
 @add_arg_table config begin
     "--emulator_type"
-    help = "Specify which emulator type to create: 'effort_velocileptors', 'effort_folps', 'ace', 'capse', 'mapse'."
+    help = "Specify which emulator type to create: 'effort_velocileptors', 'effort_folps_pk', 'effort_folps_bk', 'ace', 'capse', 'mapse'."
     arg_type = String
     required = true
     "--parameters"
@@ -111,6 +111,7 @@ end
     function classy_script(cosmo_dict, root_path)
         """
         Function to generate the necessary data samples for the given set of cosmological parameters.
+        
         Arguments:
             'cosmo_dict' -> The dictionary of cosmological parameters associated with the particular data sample.
             'root_path' -> The folder path where the data samples will be stored.
@@ -179,13 +180,18 @@ end
                     npzwrite(rand_str * "/pk_0.npy", PT.p0ktable)
                     npzwrite(rand_str * "/pk_2.npy", PT.p2ktable)
                     npzwrite(rand_str * "/pk_4.npy", PT.p4ktable)
-                    open(rand_str * "/effort_dict.json", "w") do io
+                    open(rand_str * "/param_dict.json", "w") do io
                         JSON3.write(io, cosmo_dict)
                     end
                 end
 
-            #elseif emulator_type == "effort folps"
+            #elseif emulator_type == "effort_folps_pk"
             #end
+
+            #elseif emulator_type == "effort_folps_bk"
+            #end
+
+
 
             elseif emulator_type == "ace"
                 # Computes background quantities (sigma8, sigma8(z), rs_drag, H(z), r(z), D(z), f(z))
@@ -206,7 +212,7 @@ end
                     mkdir(rand_str)
                     npzwrite(rand_str * "/result_ln10As_basis.npy", result_ln10As_basis)
                     npzwrite(rand_str * "/result_sigma8_basis.npy", result_sigma8_basis)
-                    open(rand_str * "/ace_dict.json", "w") do io 
+                    open(rand_str * "/param_dict.json", "w") do io 
                         JSON3.write(io, cosmo_dict)
                     end
                 end
@@ -228,7 +234,7 @@ end
                     npzwrite(rand_str * "/TE.npy", te)
                     npzwrite(rand_str * "/EE.npy", ee)
                     npzwrite(rand_str * "/PP.npy", pp)
-                    open(rand_str * "/capse_dict.json", "w") do io
+                    open(rand_str * "/param_dict.json", "w") do io
                         JSON3.write(io, cosmo_dict)
                     end
                 end
@@ -249,7 +255,7 @@ end
                     cosmo_dict_full = copy(cosmo_dict)
                     cosmo_dict_full["ln10As"] = 3.044 # these are not originally in the dictionary
                     cosmo_dict_full["ns"] = 0.9649
-                    open(rand_str * "/mapse_dict.json", "w") do io
+                    open(rand_str * "/param_dict.json", "w") do io
                         JSON3.write(io, cosmo_dict_full)
                     end
                 end
