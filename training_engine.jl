@@ -23,7 +23,6 @@ function run_training(df, folder_output, nn_setup_path, lr_list, n_run, n_epoch,
 
     # extracts parameter labels
     array_pars_in = names(df, Not(:observable))
-
     # extracts min/max input and output information and saves to file, then performs normalization
     in_array, out_array = EmulatorsTrainer.extract_input_output_df(df)
     in_minmax = EmulatorsTrainer.get_minmax_in(df, array_pars_in)
@@ -31,11 +30,10 @@ function run_training(df, folder_output, nn_setup_path, lr_list, n_run, n_epoch,
     npzwrite(joinpath(folder_output, "inminmax.npy"), in_minmax)
     npzwrite(joinpath(folder_output, "outminmax.npy"), out_minmax)
     EmulatorsTrainer.maximin_df!(df, in_minmax, out_minmax)
-
     # reads in the file specifying the neural network architecture and saves modified version to file
     NN_dict = JSON.parsefile(nn_setup_path)
     NN_dict["n_input_features"] = length(array_pars_in)
-    NN_dict["n_output_features"] = length(df[!, "observable"])
+    NN_dict["n_output_features"] = length(df[!, "observable"][1])
     open(joinpath(folder_output, "nn_setup.json"), "w") do io
         JSON.print(io, NN_dict)
     end
@@ -54,7 +52,6 @@ function run_training(df, folder_output, nn_setup_path, lr_list, n_run, n_epoch,
     end
     test_loss = mlpdtest(Xtest, p)
     println("Initial Test Loss: ", test_loss)
-
     # iterates through the different learning rates performs a certain number of separate runs per number of epochs specified 
     # and continually saves progress (if test loss improves) as you go
     for lr in lr_list
@@ -65,7 +62,7 @@ function run_training(df, folder_output, nn_setup_path, lr_list, n_run, n_epoch,
             if test_loss > test
                 npzwrite(joinpath(folder_output, "weights.npy"), p)
                 npzwrite(joinpath(folder_output, "best_test_loss.npy"), Array([test, lr, i])) # keeps track of best test loss so far (and which run it occurred)
-                global test_loss = test
+                test_loss = test
                 @info "New best test loss: $test (Saved weights)"
             end
         end

@@ -9,10 +9,8 @@ using JSON3
 using LinearAlgebra
 
 
-# =============================================================================
-# Argument parsing 
-# =============================================================================
 
+# Argument parsing 
 config = ArgParseSettings()
 @add_arg_table config begin
     "--emulator_type"
@@ -63,10 +61,7 @@ upper_bounds = parse.(Float64, split(upper_bounds, ","))
 
 
 
-# =============================================================================
 # Sets up Slurm workers
-# =============================================================================
-
 ENV["SLURM_NTASKS"] = ENV["JULIA_TOTAL_TASKS"]
 mgr = SlurmManager(;launch_timeout = 600.0, srun_post_exit_sleep = 2.0)
 addprocs(mgr)
@@ -180,7 +175,7 @@ end
                     npzwrite(rand_str * "/pk_0.npy", PT.p0ktable)
                     npzwrite(rand_str * "/pk_2.npy", PT.p2ktable)
                     npzwrite(rand_str * "/pk_4.npy", PT.p4ktable)
-                    open(rand_str * "/param_dict.json", "w") do io
+                    open(rand_str * "/effort_dict.json", "w") do io
                         JSON3.write(io, cosmo_dict)
                     end
                 end
@@ -212,7 +207,7 @@ end
                     mkdir(rand_str)
                     npzwrite(rand_str * "/result_ln10As_basis.npy", result_ln10As_basis)
                     npzwrite(rand_str * "/result_sigma8_basis.npy", result_sigma8_basis)
-                    open(rand_str * "/param_dict.json", "w") do io 
+                    open(rand_str * "/ace_dict.json", "w") do io 
                         JSON3.write(io, cosmo_dict)
                     end
                 end
@@ -234,7 +229,7 @@ end
                     npzwrite(rand_str * "/TE.npy", te)
                     npzwrite(rand_str * "/EE.npy", ee)
                     npzwrite(rand_str * "/PP.npy", pp)
-                    open(rand_str * "/param_dict.json", "w") do io
+                    open(rand_str * "/capse_dict.json", "w") do io
                         JSON3.write(io, cosmo_dict)
                     end
                 end
@@ -255,7 +250,7 @@ end
                     cosmo_dict_full = copy(cosmo_dict)
                     cosmo_dict_full["ln10As"] = 3.044 # these are not originally in the dictionary
                     cosmo_dict_full["ns"] = 0.9649
-                    open(rand_str * "/param_dict.json", "w") do io
+                    open(rand_str * "/mapse_dict.json", "w") do io
                         JSON3.write(io, cosmo_dict_full)
                     end
                 end
@@ -271,8 +266,5 @@ end
 end
 
 
-# =============================================================================
 # Runs code
-# =============================================================================
-
 EmulatorsTrainer.compute_dataset(samples, parameters, root_dir, classy_script, :distributed)

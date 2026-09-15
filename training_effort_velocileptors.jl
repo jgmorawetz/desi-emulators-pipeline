@@ -1,3 +1,5 @@
+using Pkg
+Pkg.activate(".")
 using DataFrames
 using Effort
 using ArgParse
@@ -15,7 +17,7 @@ config = ArgParseSettings()
 @add_arg_table config begin
     "--multipole"
     help = "Specify the multipole to be trained. One of 0, 2, 4."
-    arg_type = Int
+    arg_type = String
     required = true
     "--component"
     help = "Specify the component to be trained. One of '11', 'loop', 'ct'."
@@ -63,9 +65,10 @@ learning_rates = parsed_args["learning_rates"]
 learning_rates = parse.(Float64, split(learning_rates, ","))
 
 
+
 # Defines the necessary preprocessing functions (undoes primordial amplitude and growth factor)
 function D_ODE(z, H0, ombh2, omch2, Mnu, w0, wa)
-    cosmology = Effort.w0waCDMCosmology(ln10Aₛ=3.0, nₛ=0.96, h=H0/100, ωb=ombh2, ωc=omch2, mν=Mnu, w0=w0, wa=wa)
+    cosmology = Effort.w0waCDMCosmology(ln10Aₛ=3.044, nₛ=0.9649, h=H0/100, ωb=ombh2, ωc=omch2, mν=Mnu, w0=w0, wa=wa)
     return Effort.D_z(z, cosmology)
 end
 
@@ -93,6 +96,9 @@ targets = Matrix{Float64}(undef, n_samples, n_output)
 
 # Goes through the data samples and adds input/target features and then at end constructs dataframe
 for (idx, sub) in enumerate(subdirs)
+    if idx % 50000 == 0
+        println("Loaded up to $(idx) samples.")
+    end
     sub_path = joinpath(dataset_directory, sub)
     param_dict = JSON.parsefile(joinpath(sub_path, "effort_dict.json"))
     # Determines whether w0waCDM or Mnuw0waCDM model
@@ -118,13 +124,14 @@ end
 if model == "w0waCDM"
     df = DataFrame(z=input_params[:, 1], ln10As=input_params[:, 2], ns=input_params[:, 3], 
                    H0=input_params[:, 4], ombh2=input_params[:, 5], omch2=input_params[:, 6],
-                   w0=input_params[:, 7], wa=input_params[:, 8])
+                   w0=input_params[:, 7], wa=input_params[:, 8],
+                   observable=[targets[i, :] for i in 1:n_samples])
 elseif model == "Mnuw0waCDM"
     df = DataFrame(z=input_params[:, 1], ln10As=input_params[:, 2], ns=input_params[:, 3], 
                    H0=input_params[:, 4], ombh2=input_params[:, 5], omch2=input_params[:, 6],
-                   Mnu=input_params[:, 7], w0=input_params[:, 8], wa=input_params[:, 9])
+                   Mnu=input_params[:, 7], w0=input_params[:, 8], wa=input_params[:, 9],
+                   observable=[targets[i, :] for i in 1:n_samples])
 end
-
 
 # Now runs the training itself
 run_training(df, save_directory, network_architecture_path, learning_rates, n_run, n_epoch, batchsize)
