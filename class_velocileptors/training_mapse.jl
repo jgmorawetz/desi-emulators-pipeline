@@ -8,7 +8,7 @@ using DelimitedFiles
 using Random
 using LinearAlgebra
 using Statistics
-include("training_engine.jl")
+include(joinpath(@__DIR__, "..", "training_engine.jl"))
 
 
 
@@ -70,12 +70,11 @@ learning_rates = parse.(Float64, split(learning_rates, ","))
 subdirs = readdir(dataset_directory)
 n_samples = length(subdirs)
 example_param_dict = JSON.parsefile(joinpath(dataset_directory, subdirs[1], "mapse_dict.json"))
-n_input = length(example_param_dict) - 2 # subtracts two since As, ns not to be included here
-if haskey(example_param_dict, "w0") && haskey(example_param_dict, "wa") && ! haskey(example_param_dict, "Mnu")
-    model = "w0waCDM"
-elseif haskey(example_param_dict, "w0") && haskey(example_param_dict, "wa") && haskey(example_param_dict, "Mnu")
-    model = "Mnuw0waCDM"
-end
+# Input order: the standard parameters present in the samples, then any extra ones (sorted); As, ns not to be included here
+standard_params = ["z", "H0", "ombh2", "omch2", "Mnu", "w0", "wa"]
+param_names = vcat(filter(param -> haskey(example_param_dict, param), standard_params),
+                   sort(filter(param -> !(param in vcat(standard_params, ["ln10As", "ns"])), collect(keys(example_param_dict)))))
+n_input = length(param_names)
 k_grid = npzread(joinpath(dataset_directory, subdirs[1], "kv.npy"))
 nk = length(k_grid)
 
@@ -91,15 +90,12 @@ for (idx, sub) in enumerate(subdirs)
     end
     sub_path = joinpath(dataset_directory, sub)
     param_dict = JSON.parsefile(joinpath(sub_path, "mapse_dict.json"))
-    # Determines whether w0waCDM or Mnuw0waCDM model
-    if model == "w0waCDM"
-        z, ln10As, ns, H0, ombh2, omch2, w0, wa = (param_dict[param] for param in ["z", "ln10As", "ns", "H0", "ombh2", "omch2", "w0", "wa"])
-        Mnu = 0.06
-        input_params[idx, :] = [z, H0, ombh2, omch2, w0, wa]
-    elseif model == "Mnuw0waCDM"
-        z, ln10As, ns, H0, ombh2, omch2, Mnu, w0, wa = (param_dict[param] for param in ["z", "ln10As", "ns", "H0", "ombh2", "omch2", "Mnu", "w0", "wa"])
-        input_params[idx, :] = [z, H0, ombh2, omch2, Mnu, w0, wa]
-    end
+    input_params[idx, :] = [param_dict[param] for param in param_names]
+    z, ln10As, ns, H0, ombh2, omch2 = (param_dict[param] for param in ["z", "ln10As", "ns", "H0", "ombh2", "omch2"])
+    # Fixed values if not varied, as in the data generation
+    Mnu = get(param_dict, "Mnu", 0.06)
+    w0 = get(param_dict, "w0", -1.0)
+    wa = get(param_dict, "wa", 0.0)
     # Load true spectrum (Pcb or Pmm)
     spec_file = spectrum_kind == "cb" ? "pk_cb.npy" : "pk_mm.npy"
     P_true = npzread(joinpath(sub_path, spec_file))
@@ -131,17 +127,8 @@ pca_basis = V[:, 1:n_pca]
 pca_coefs = centered_targets * pca_basis
 Mapse.save_pca_metadata(save_directory, pca_mean, pca_basis)
 
-if model == "w0waCDM"
-    df = DataFrame(z=input_params[:, 1],  
-                   H0=input_params[:, 2], ombh2=input_params[:, 3], omch2=input_params[:, 4],
-                   w0=input_params[:, 5], wa=input_params[:, 6],
-                   observable=[pca_coefs[i, :] for i in 1:n_samples])
-elseif model == "Mnuw0waCDM"
-    df = DataFrame(z=input_params[:, 1],  
-                   H0=input_params[:, 2], ombh2=input_params[:, 3], omch2=input_params[:, 4],
-                   Mnu=input_params[:, 5], w0=input_params[:, 6], wa=input_params[:, 7],
-                   observable=[pca_coefs[i, :] for i in 1:n_samples])
-end
+df = DataFrame(input_params, param_names)
+df.observable = [pca_coefs[i, :] for i in 1:n_samples]
 
 # Now runs the training itself
 run_training(df, save_directory, network_architecture_path, learning_rates, n_run, n_epoch, batchsize)

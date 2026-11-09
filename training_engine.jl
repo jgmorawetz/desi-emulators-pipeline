@@ -34,6 +34,8 @@ function run_training(df, folder_output, nn_setup_path, lr_list, n_run, n_epoch,
     NN_dict = JSON.parsefile(nn_setup_path)
     NN_dict["n_input_features"] = length(array_pars_in)
     NN_dict["n_output_features"] = length(df[!, "observable"][1])
+    # records the input parameter names (in order) so that the emulator can be loaded without knowing them
+    get!(NN_dict, "emulator_description", Dict{String, Any}())["parameters"] = join(array_pars_in, ", ")
     open(joinpath(folder_output, "nn_setup.json"), "w") do io
         JSON.print(io, NN_dict)
     end

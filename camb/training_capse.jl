@@ -8,7 +8,7 @@ using DelimitedFiles
 using Random
 using LinearAlgebra
 using Statistics
-include("training_engine.jl")
+include(joinpath(@__DIR__, "..", "training_engine.jl"))
 
 
 
@@ -113,12 +113,14 @@ end
 subdirs = readdir(dataset_directory)
 n_samples = length(subdirs)
 example_param_dict = JSON.parsefile(joinpath(dataset_directory, subdirs[1], "capse_dict.json"))
-n_input = length(example_param_dict)
-if haskey(example_param_dict, "w0") && haskey(example_param_dict, "wa") && ! haskey(example_param_dict, "Mnu")
-    model = "w0waCDM"
-elseif haskey(example_param_dict, "w0") && haskey(example_param_dict, "wa") && haskey(example_param_dict, "Mnu")
-    model = "Mnuw0waCDM"
+# Input order: the standard parameters present in the samples, then any extra ones (sorted)
+standard_params = ["ln10As", "ns", "H0", "ombh2", "omch2", "tau", "Mnu", "w0", "wa"]
+param_names = vcat(filter(param -> haskey(example_param_dict, param), standard_params),
+                   sort(filter(param -> !(param in standard_params), collect(keys(example_param_dict)))))
+if param_names[1] != "ln10As" || param_names[6] != "tau"
+    error("The postprocessing assumes ln10As is the first input and tau the sixth, got $(param_names)")
 end
+n_input = length(param_names)
 nl = length(npzread(joinpath(dataset_directory, subdirs[1], "TT.npy")))
 n_output = length(nodes)
 
@@ -134,15 +136,8 @@ for (idx, sub) in enumerate(subdirs)
     end
     sub_path = joinpath(dataset_directory, sub)
     param_dict = JSON.parsefile(joinpath(sub_path, "capse_dict.json"))
-    # Determines whether w0waCDM or Mnuw0waCDM model
-    if model == "w0waCDM"
-        ln10As, ns, H0, ombh2, omch2, tau, w0, wa = (param_dict[param] for param in ["ln10As", "ns", "H0", "ombh2", "omch2", "tau", "w0", "wa"])
-        Mnu = 0.06
-        input_params[idx, :] = [ln10As, ns, H0, ombh2, omch2, tau, w0, wa]
-    elseif model == "Mnuw0waCDM"
-        ln10As, ns, H0, ombh2, omch2, tau, Mnu, w0, wa = (param_dict[param] for param in ["ln10As", "ns", "H0", "ombh2", "omch2", "tau", "Mnu", "w0", "wa"])
-        input_params[idx, :] = [ln10As, ns, H0, ombh2, omch2, tau, Mnu, w0, wa]
-    end
+    input_params[idx, :] = [param_dict[param] for param in param_names]
+    ln10As, tau = param_dict["ln10As"], param_dict["tau"]
     if spectrum_kind == "PP"
         factor = preprocess_PP(ln10As) # applies different preprocessing depending on component
     else
@@ -152,17 +147,11 @@ for (idx, sub) in enumerate(subdirs)
     target_file = npzread(joinpath(sub_path, "$(spectrum_kind).npy"))[1:lmax-1]
     targets[idx, :] = interpolate_dense_chunk(vec(Array(target_file)) ./ factor, ells, nodes)
 end
-if model == "w0waCDM"
-    df = DataFrame(ln10As=input_params[:, 1], ns=input_params[:, 2], H0=input_params[:, 3],
-                   ombh2=input_params[:, 4], omch2=input_params[:, 5], tau=input_params[:, 6],
-                   w0=input_params[:, 7], wa=input_params[:, 8],
-                   observable=[targets[i, :] for i in 1:n_samples])
-elseif model == "Mnuw0waCDM"
-    df = DataFrame(ln10As=input_params[:, 1], ns=input_params[:, 2], H0=input_params[:, 3],
-                   ombh2=input_params[:, 4], omch2=input_params[:, 5], tau=input_params[:, 6],
-                   Mnu=input_params[:, 7], w0=input_params[:, 8], wa=input_params[:, 9],
-                   observable=[targets[i, :] for i in 1:n_samples])
-end
+df = DataFrame(input_params, param_names)
+df.observable = [targets[i, :] for i in 1:n_samples]
+
+# Saves the l grid of the outputs (the nodes), which the emulator needs to interpolate back onto all l
+npzwrite(joinpath(save_directory, "l.npy"), nodes)
 
 # Now runs the training itself
 run_training(df, save_directory, network_architecture_path, learning_rates, n_run, n_epoch, batchsize)

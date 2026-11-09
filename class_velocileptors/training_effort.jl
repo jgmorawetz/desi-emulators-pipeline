@@ -7,7 +7,7 @@ using DelimitedFiles
 using Random
 using LinearAlgebra
 using Statistics
-include("training_engine.jl")
+include(joinpath(@__DIR__, "..", "training_engine.jl"))
 
 
 
